@@ -24,7 +24,7 @@ public class Agent : MonoBehaviour
     }
 
     private void Start()
-    {
+    {      
     }
 
     public void FindPathToTarget(Vector2Int startPos, Vector2Int endPos, Cell[,] grid)

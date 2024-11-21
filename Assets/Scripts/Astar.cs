@@ -13,10 +13,51 @@ public class Astar
     /// <param name="endPos"></param>
     /// <param name="grid"></param>
     /// <returns></returns>
+    //
+    public readonly static List<Vector2Int> neighbours = new List<Vector2Int>
+    {
+        new Vector2Int(0,1), new Vector2Int(0,-1), new Vector2Int(1,0), new Vector2Int(-1,0), new Vector2Int(1,1), new Vector2Int(-1,1), new Vector2Int(-1,-1), new Vector2Int(1,-1)
+    };
+
     public List<Vector2Int> FindPathToTarget(Vector2Int startPos, Vector2Int endPos, Cell[,] grid)
     {
+        List<Vector2Int> openNodes = new List<Vector2Int>();
+        List<Vector2Int> closedNodes = new List<Vector2Int>();
+        openNodes.Add(startPos);
+
+        while(openNodes.Count() > 0)
+        {
+            Vector2Int currentPosition = openNodes[0];
+
+            if(currentPosition == endPos)
+            {
+                break;
+            }
+
+
+
+
+        }
+
         return null;
     }
+
+    public List<Vector2Int> FindNeighbours(Vector2Int currentPos, Cell[,] grid)
+    {
+        List<Vector2Int> positions = new List<Vector2Int>();
+
+        foreach (Vector2Int directions in neighbours)
+        {
+            Vector2Int tempPos = currentPos + directions;
+            //if(grid contains tempPos)
+            //{
+            positions.Add(tempPos);
+            //}
+        }
+
+        return positions;
+    }
+
 
     /// <summary>
     /// This is the Node class you can use this class to store calculated FScores for the cells of the grid, you can leave this as it is
@@ -26,7 +67,8 @@ public class Astar
         public Vector2Int position; //Position on the grid
         public Node parent; //Parent Node of this node
 
-        public float FScore { //GScore + HScore
+        public float FScore
+        { //GScore + HScore
             get { return GScore + HScore; }
         }
         public float GScore; //Current Travelled Distance
