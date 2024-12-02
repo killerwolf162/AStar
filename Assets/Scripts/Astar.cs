@@ -14,48 +14,77 @@ public class Astar
     /// <param name="grid"></param>
     /// <returns></returns>
     //
-    public readonly static List<Vector2Int> neighbours = new List<Vector2Int>
-    {
-        new Vector2Int(0,1), new Vector2Int(0,-1), new Vector2Int(1,0), new Vector2Int(-1,0), new Vector2Int(1,1), new Vector2Int(-1,1), new Vector2Int(-1,-1), new Vector2Int(1,-1)
-    };
+
+    Dictionary<Vector2Int, Node> openNodes;
+    Dictionary<Vector2Int, Node> closedNodes;
+    List<Vector2Int> path;
 
     public List<Vector2Int> FindPathToTarget(Vector2Int startPos, Vector2Int endPos, Cell[,] grid)
     {
-        List<Vector2Int> openNodes = new List<Vector2Int>();
-        List<Vector2Int> closedNodes = new List<Vector2Int>();
-        openNodes.Add(startPos);
+        path = new List<Vector2Int>();
 
-        while(openNodes.Count() > 0)
+        Cell currentCell = grid[startPos.x, startPos.y];
+        Node currentNode = new Node(currentCell.gridPosition, null, 0, GetDistance(startPos, endPos));
+
+        openNodes = new Dictionary<Vector2Int, Node>() { { currentNode.position, currentNode } };
+        closedNodes = new Dictionary<Vector2Int, Node>();
+
+        while (openNodes.Count > 0)
         {
-            Vector2Int currentPosition = openNodes[0];
+            openNodes.Remove(currentNode.position);
+            closedNodes.Add(currentNode.position, currentNode);
 
-            if(currentPosition == endPos)
-            {
-                break;
-            }
+            if (currentNode.position == endPos)
+                return GetPath(currentNode, startPos, endPos);
 
-
-
-
+            FindNeighbours(currentNode, endPos, grid);
+            currentNode = FindLowestScore();
         }
-
-        return null;
+        return path;
     }
 
-    public List<Vector2Int> FindNeighbours(Vector2Int currentPos, Cell[,] grid)
+    public List<Vector2Int> GetPath(Node currentNode, Vector2Int startPos, Vector2Int endPos)
     {
-        List<Vector2Int> positions = new List<Vector2Int>();
-
-        foreach (Vector2Int directions in neighbours)
+        Node reversePath = currentNode;
+        while (reversePath.position != startPos)
         {
-            Vector2Int tempPos = currentPos + directions;
-            //if(grid contains tempPos)
-            //{
-            positions.Add(tempPos);
-            //}
+            path.Add(reversePath.position);
+            reversePath = reversePath.parent;
         }
+        path.Reverse();
 
-        return positions;
+        return path;
+    }
+
+    public void FindNeighbours(Node currentNode, Vector2Int endPos, Cell[,] grid)
+    {
+        foreach (Cell cell in grid[currentNode.position.x, currentNode.position.y].GetNeighbours(grid))
+        {
+            if (openNodes.ContainsKey(cell.gridPosition) || closedNodes.ContainsKey(cell.gridPosition))
+                continue;
+            Node newNode = new Node(cell.gridPosition, currentNode, currentNode.GScore + GetDistance(cell.gridPosition, currentNode.position), GetDistance(cell.gridPosition, endPos));
+            openNodes.Add(cell.gridPosition, newNode);
+        }
+    }
+
+    public Node FindLowestScore()
+    {
+        Vector2Int lowestScore = openNodes.Keys.FirstOrDefault();
+        int currentValue = int.MaxValue;
+        foreach (KeyValuePair<Vector2Int, Node> node in openNodes)
+        {
+            if (node.Value.FScore < currentValue)
+            {
+                currentValue = node.Value.FScore;
+                lowestScore = node.Key;
+            }
+        }
+        return openNodes[lowestScore];
+    }
+
+    public static int GetDistance(Vector2Int begin, Vector2Int end)
+    {
+        return Mathf.Abs((begin.x - end.x) + (begin.y - end.y));
     }
 
 
@@ -67,12 +96,12 @@ public class Astar
         public Vector2Int position; //Position on the grid
         public Node parent; //Parent Node of this node
 
-        public float FScore
+        public int FScore
         { //GScore + HScore
             get { return GScore + HScore; }
         }
-        public float GScore; //Current Travelled Distance
-        public float HScore; //Distance estimated based on Heuristic
+        public int GScore; //Current Travelled Distance
+        public int HScore; //Distance estimated based on Heuristic
 
         public Node() { }
         public Node(Vector2Int position, Node parent, int GScore, int HScore)
