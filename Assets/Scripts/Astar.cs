@@ -58,18 +58,49 @@ public class Astar
 
     public void FindNeighbours(Node currentNode, Vector2Int endPos, Cell[,] grid)
     {
+        List<Cell> neighbours = new List<Cell>();
+
         foreach (Cell cell in grid[currentNode.position.x, currentNode.position.y].GetNeighbours(grid))
+        {
+            // filter cells out of list that have wall on x/y value
+
+            neighbours.Add(cell);
+
+            if (cell.gridPosition.x == currentNode.position.x +1 && grid[currentNode.position.x, currentNode.position.y].HasWall(Wall.RIGHT))
+            {
+                neighbours.Remove(cell);
+
+            }
+            if (cell.gridPosition.x == currentNode.position.x -1 && grid[currentNode.position.x, currentNode.position.y].HasWall(Wall.LEFT))
+            {
+                neighbours.Remove(cell);
+
+            }
+            if (cell.gridPosition.y == currentNode.position.y +1 && grid[currentNode.position.x, currentNode.position.y].HasWall(Wall.UP))
+            {
+                neighbours.Remove(cell);
+
+            }
+            if (cell.gridPosition.y == currentNode.position.y -1 && grid[currentNode.position.x, currentNode.position.y].HasWall(Wall.DOWN))
+            {
+                neighbours.Remove(cell);
+
+            }           
+        }
+
+        foreach (Cell cell in neighbours)
         {
             if (openNodes.ContainsKey(cell.gridPosition) || closedNodes.ContainsKey(cell.gridPosition))
                 continue;
             Node newNode = new Node(cell.gridPosition, currentNode, currentNode.GScore + GetDistance(cell.gridPosition, currentNode.position), GetDistance(cell.gridPosition, endPos));
             openNodes.Add(cell.gridPosition, newNode);
         }
+
     }
 
     public Node FindLowestScore()
     {
-        Vector2Int lowestScore = openNodes.Keys.FirstOrDefault();
+        Vector2Int lowestScore = openNodes.Keys.First();
         int currentValue = int.MaxValue;
         foreach (KeyValuePair<Vector2Int, Node> node in openNodes)
         {
