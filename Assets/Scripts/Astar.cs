@@ -13,10 +13,9 @@ public class Astar
     /// <param name="endPos"></param>
     /// <param name="grid"></param>
     /// <returns></returns>
-    //
-
     Dictionary<Vector2Int, Node> openNodes;
     Dictionary<Vector2Int, Node> closedNodes;
+
     List<Vector2Int> path;
 
     public List<Vector2Int> FindPathToTarget(Vector2Int startPos, Vector2Int endPos, Cell[,] grid)
@@ -35,15 +34,15 @@ public class Astar
             closedNodes.Add(currentNode.position, currentNode);
 
             if (currentNode.position == endPos)
-                return GetPath(currentNode, startPos, endPos);
+                return GetPath(currentNode, startPos);
 
-            FindNeighbours(currentNode, endPos, grid);
+            FindVallidNeighbours(currentNode, endPos, grid);
             currentNode = FindLowestScore();
         }
         return path;
     }
 
-    public List<Vector2Int> GetPath(Node currentNode, Vector2Int startPos, Vector2Int endPos)
+    private List<Vector2Int> GetPath(Node currentNode, Vector2Int startPos)
     {
         Node reversePath = currentNode;
         while (reversePath.position != startPos)
@@ -56,49 +55,36 @@ public class Astar
         return path;
     }
 
-    public void FindNeighbours(Node currentNode, Vector2Int endPos, Cell[,] grid)
+    private void FindVallidNeighbours(Node currentNode, Vector2Int endPos, Cell[,] grid)
     {
-        List<Cell> neighbours = new List<Cell>();
+        Cell curCell = grid[currentNode.position.x, currentNode.position.y];
 
-        foreach (Cell cell in grid[currentNode.position.x, currentNode.position.y].GetNeighbours(grid))
+        List<Cell> allNeighbours = grid[currentNode.position.x, currentNode.position.y].GetNeighbours(grid);
+        List<Cell> vallidNeighbours = new List<Cell>();
+
+        foreach (Cell cell in allNeighbours)
         {
-            // filter cells out of list that have wall on x/y value
+            int nextCellXpos = cell.gridPosition.x;
+            int nexyCellYpos = cell.gridPosition.y;
+            int curCellXpos = curCell.gridPosition.x;
+            int curCellypos = curCell.gridPosition.y;
 
-            neighbours.Add(cell);
+            if (nextCellXpos == curCellXpos + 1 && curCell.HasWall(Wall.RIGHT) || nextCellXpos == curCellXpos - 1 && curCell.HasWall(Wall.LEFT) || nexyCellYpos == curCellypos + 1 && curCell.HasWall(Wall.UP) || nexyCellYpos == curCellypos - 1 && curCell.HasWall(Wall.DOWN))
+                continue;
 
-            if (cell.gridPosition.x == currentNode.position.x +1 && grid[currentNode.position.x, currentNode.position.y].HasWall(Wall.RIGHT))
-            {
-                neighbours.Remove(cell);
-
-            }
-            if (cell.gridPosition.x == currentNode.position.x -1 && grid[currentNode.position.x, currentNode.position.y].HasWall(Wall.LEFT))
-            {
-                neighbours.Remove(cell);
-
-            }
-            if (cell.gridPosition.y == currentNode.position.y +1 && grid[currentNode.position.x, currentNode.position.y].HasWall(Wall.UP))
-            {
-                neighbours.Remove(cell);
-
-            }
-            if (cell.gridPosition.y == currentNode.position.y -1 && grid[currentNode.position.x, currentNode.position.y].HasWall(Wall.DOWN))
-            {
-                neighbours.Remove(cell);
-
-            }           
+            vallidNeighbours.Add(cell);
         }
 
-        foreach (Cell cell in neighbours)
+        foreach (Cell cell in vallidNeighbours)
         {
             if (openNodes.ContainsKey(cell.gridPosition) || closedNodes.ContainsKey(cell.gridPosition))
                 continue;
             Node newNode = new Node(cell.gridPosition, currentNode, currentNode.GScore + GetDistance(cell.gridPosition, currentNode.position), GetDistance(cell.gridPosition, endPos));
             openNodes.Add(cell.gridPosition, newNode);
         }
-
     }
 
-    public Node FindLowestScore()
+    private Node FindLowestScore()
     {
         Vector2Int lowestScore = openNodes.Keys.First();
         int currentValue = int.MaxValue;
